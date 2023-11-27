@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Alpine.js RSS</title>
+
+        <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+        <script src="https://cdn.jsdelivr.net/npm/rss-parser@3.7.6/dist/rss-parser.min.js"></script>
+    </head>
+    <body>
+        <div x-data="setup()" x-init="init()">
+            <template x-for="(entry, index) in sortedFeed" :key="index">
+                <div>
+                    <span x-text="entry.title"></span> <a x-bind:href="entry.link" x-text="entry.link"></a>
+                    <span x-text="entry.date.toDateString()"></span>
+                </div>
+            </template>
+        </div>
+
+        <script>
+            let parser = new RSSParser()
+
+            function setup () {
+                return {
+                    feed: [],
+
+                    sources: [
+                        'https://codecourse.com/api/rss/courses',
+                        'https://buttondown.email/alpinejs/rss'
+                    ],
+
+                    get (source) {
+                        parser.parseURL(source, (err, feed) => {
+                            if (err) {}
+
+                            feed.items.forEach(entry => {
+                                this.addToFeed(entry)
+                            })
+                        })
+                    },
+
+                    get sortedFeed () {
+                        return this.feed.sort((first, second) => {
+                            return second.date.getTime() - first.date.getTime()
+                        })
+                    },
+
+                    addToFeed (entry) {
+                        this.feed.push({
+                            title: entry.title,
+                            link: entry.link,
+                            date: new Date(entry.pubDate),
+                        })
+                    },
+                    
+                    init () {
+                        this.sources.forEach(source => {
+                            this.get(source)
+                        })
+                    }
+                }
+            }
+        </script>
+    </body>
+</html>
